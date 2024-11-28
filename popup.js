@@ -7,29 +7,24 @@ document.addEventListener('DOMContentLoaded', () => {
       chrome.runtime.sendMessage({ message: 'startRecording' }, (response) => {
         if (chrome.runtime.lastError) {
           console.error(chrome.runtime.lastError);
-        } else {
+          actionsDiv.innerHTML = 'Error starting recording.';
+        } else if (response.success) {
           actionsDiv.innerHTML = 'Recording started...';
+        } else {
+          actionsDiv.innerHTML = `Error: ${response.error}`;
         }
       });
     });
   
     stopButton.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ message: 'getRecordedActions' }, (response) => {
+      chrome.runtime.sendMessage({ message: 'stopRecording' }, (response) => { // Changed message to 'stopRecording'
         if (chrome.runtime.lastError) {
           console.error(chrome.runtime.lastError);
-          actionsDiv.innerHTML = 'Error retrieving actions.';
+          actionsDiv.innerHTML = 'Error stopping recording.';
+        } else if (response.success) {
+          actionsDiv.innerHTML = 'Recording stopped successfully.';
         } else {
-          actionsDiv.innerHTML = '';
-  
-          if (response && response.length > 0) {
-            response.forEach((action, index) => {
-              const actionElement = document.createElement('div');
-              actionElement.textContent = `${index + 1}. ${action.type}: ${JSON.stringify(action.details)}`;
-              actionsDiv.appendChild(actionElement);
-            });
-          } else {
-            actionsDiv.textContent = 'No actions recorded.';
-          }
+          actionsDiv.innerHTML = `Error: ${response.error}`;
         }
       });
     });

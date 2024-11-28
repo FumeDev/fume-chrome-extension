@@ -3,7 +3,15 @@
     "name": "Fume Action Recorder",
     "version": "1.0",
     "description": "A Chrome extension to record user web actions.",
-    "permissions": ["activeTab", "scripting", "storage", "tabs"],
+    "permissions": [
+        "activeTab",
+        "tabs",
+        "scripting",
+        "storage",
+        "runtime",
+        "http://*/*",
+        "https://*/*"
+    ],
     "background": {
       "service_worker": "background.js"
     },
