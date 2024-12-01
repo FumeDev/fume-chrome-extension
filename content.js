@@ -2,86 +2,130 @@
 if (!window.hasRun) {
   window.hasRun = true;
 
-  // Event listener for key presses
-  document.addEventListener('keydown', (event) => {
-    // Send message to background script
+  // Track current input state
+  let currentInputElement = null;
+  let inputBuffer = '';
+
+  // Helper function to send input action
+  function sendInputAction(element, x, y, endActionType = null) {
+    // Only send if value has changed
+    if (!element || element.value === inputBuffer) return false;
+    
+    // Send the input action
     chrome.runtime.sendMessage({
-      actionType: 'keydown',
+      actionType: 'input',
       details: {
-        key: event.key,
-        code: event.code,
-        element: event.target.tagName,
-        id: event.target.id,
-        class: event.target.className,
-        xpath: getXPath(event.target) // Added XPath to details
+        value: element.value,
+        html: element.outerHTML,
+        x: x,
+        y: y
       }
     });
+
+    // If there's an end action type (click or enter), send it as well
+    if (endActionType) {
+      let endActionDetails = {
+        html: element.outerHTML,
+        x: x,
+        y: y
+      };
+      
+      if (endActionType === 'specialKey') {
+        endActionDetails.key = 'Enter';
+      }
+
+      chrome.runtime.sendMessage({
+        actionType: endActionType,
+        details: endActionDetails
+      });
+    }
+
+    return true;
+  }
+
+  // Event listener for key presses
+  document.addEventListener('keydown', (event) => {
+    if (!currentInputElement) return;
+
+    if (event.key === 'Enter' || event.key === 'Escape') {
+      const element = currentInputElement;
+      const x = event.clientX;
+      const y = event.clientY;
+
+      // Send the accumulated input if there are changes, along with the special key press
+      sendInputAction(element, x, y, 'specialKey');
+
+      currentInputElement = null;
+      inputBuffer = '';
+    }
   });
 
   // Event listener for clicks
   document.addEventListener('click', (event) => {
-    // Send message to background script
-    chrome.runtime.sendMessage({
-      actionType: 'click',
-      details: {
-        element: event.target.tagName,
-        id: event.target.id,
-        class: event.target.className,
-        x: event.clientX,
-        y: event.clientY,
-        xpath: getXPath(event.target) // Added XPath to details
+    if (currentInputElement && event.target !== currentInputElement) {
+      const element = currentInputElement;
+      const rect = element.getBoundingClientRect();
+
+      // Send any pending input along with the click action
+      sendInputAction(
+        element,
+        rect.x,
+        rect.y,
+        'click'
+      );
+
+      currentInputElement = null;
+      inputBuffer = '';
+    } else {
+      // If no input to handle, send click immediately
+      chrome.runtime.sendMessage({
+        actionType: 'click',
+        details: {
+          html: event.target.outerHTML,
+          x: event.clientX,
+          y: event.clientY
+        }
+      });
+    }
+
+    // If clicking on an input element, start tracking it
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+      if (event.target !== currentInputElement) {
+        currentInputElement = event.target;
+        inputBuffer = event.target.value;
       }
-    });
+    }
   });
 
   // Event listener for input changes
   document.addEventListener('input', (event) => {
-    // Send message to background script
-    chrome.runtime.sendMessage({
-      actionType: 'input',
-      details: {
-        value: event.target.value,
-        element: event.target.tagName,
-        id: event.target.id,
-        class: event.target.className,
-        xpath: getXPath(event.target) // Added XPath to details
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+      if (!currentInputElement) {
+        currentInputElement = event.target;
+        inputBuffer = event.target.value;
       }
-    });
+    }
+  });
+
+  // Handle focus out to catch when user leaves an input
+  document.addEventListener('focusout', (event) => {
+    if (currentInputElement && (event.target === currentInputElement)) {
+      const rect = currentInputElement.getBoundingClientRect();
+      sendInputAction(
+        currentInputElement,
+        rect.x,
+        rect.y,
+        'click'  // Add click action when focus is lost
+      );
+      currentInputElement = null;
+      inputBuffer = '';
+    }
   });
 
   // Listen for messages from the background script
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message === 'getRecordedActions') {
-      // Optionally, handle requests if necessary
-      // sendResponse({}); // Adjust as needed
+      // Handle if needed
     }
   });
-}
-
-// Add a helper function to compute the relative XPath of an element
-function getXPath(element) {
-    if (element.id !== '') {
-        return `//*[@id="${element.id}"]`;
-    }
-
-    let path = [];
-    while (element && element.nodeType === Node.ELEMENT_NODE) {
-        let index = 1;
-        let sibling = element.previousElementSibling;
-        while (sibling) {
-            if (sibling.tagName === element.tagName) {
-                index++;
-            }
-            sibling = sibling.previousElementSibling;
-        }
-        const tagName = element.tagName.toLowerCase();
-        const part = `${tagName}[${index}]`;
-        path.unshift(part);
-        element = element.parentNode;
-        if (element.id) {
-            path.unshift(`//*[@id="${element.id}"]`);
-            break;
-        }
-    }
-    return path.length > 0 ? '.' + path.join('/') : '';
 }

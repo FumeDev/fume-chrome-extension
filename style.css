@@ -1,18 +1,71 @@
 body {
-    font-family: Arial, sans-serif;
-    width: 200px;
-    padding: 10px;
-  }
-  
-  button {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    width: 300px;
+    padding: 20px;
+    background-color: #111111;
+    color: #ffffff;
+    margin: 0;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+h1 {
+    font-size: 18px;
+    margin: 0 0 20px 0;
+    color: #ffffff;
+    font-weight: 500;
+    text-align: center;
+}
+
+button {
     width: 100%;
-    margin-bottom: 10px;
-    padding: 5px;
-  }
-  
-  #actions {
-    margin-top: 10px;
-    font-size: 12px;
+    margin-bottom: 12px;
+    padding: 10px 15px;
+    border: 1px solid #333333;
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+button:hover {
+    background-color: #222222;
+    border-color: #444444;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+#actions {
+    margin-top: 15px;
+    font-size: 13px;
     max-height: 150px;
     overflow-y: auto;
-  }
+    padding: 12px;
+    border: 1px solid #333333;
+    border-radius: 6px;
+    background-color: #1a1a1a;
+    line-height: 1.4;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #333333;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #444444;
+}
