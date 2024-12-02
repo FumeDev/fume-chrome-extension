@@ -1,5 +1,5 @@
 // Define the API base URL
-const API_BASE_URL = 'https://d246-2601-645-8700-5460-ad03-d4db-39de-7c1f.ngrok-free.app'; // Replace with your actual API base URL
+const API_BASE_URL = 'https://ff61-2601-645-8700-5460-38ac-1b89-3e3a-f547.ngrok-free.app'; // Replace with your actual API base URL
 
 // Initialize the recordedActions array and recordingId
 let recordedActions = [];
